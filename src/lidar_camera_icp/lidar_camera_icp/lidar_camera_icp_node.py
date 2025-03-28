@@ -6,6 +6,7 @@ from rclpy.node import Node
 
 # 消息类型
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
+from geometry_msgs.msg import PoseStamped
 import message_filters
 
 import numpy as np
@@ -48,6 +49,7 @@ class LidarCameraICPNode(Node):
         depth_sub = message_filters.Subscriber(self, Image, '/depth_to_rgb/image_raw')
         lidar_sub = message_filters.Subscriber(self, PointCloud2, '/livox/lidar')
 
+        self.pose_publisher = self.create_publisher(PoseStamped, '/camera_to_lidar_RT', 10)
 
         ats = message_filters.ApproximateTimeSynchronizer(
             [depth_sub, lidar_sub],
@@ -129,6 +131,33 @@ class LidarCameraICPNode(Node):
                                  parent_frame="camera_frame",
                                  child_frame="lidar_frame",
                                  stamp=depth_msg.header.stamp)
+        self.publish_icp_pose(refined_transform, frame_id="camera_frame", stamp=depth_msg.header.stamp)
+
+    def publish_icp_pose(self, transform_4x4, frame_id, stamp):
+        """从 4x4 RT 矩阵构造并发布 PoseStamped"""
+        pose_msg = PoseStamped()
+        pose_msg.header.stamp = stamp
+        pose_msg.header.frame_id = frame_id
+
+        # 平移部分
+        t = transform_4x4[:3, 3].copy()
+        pose_msg.pose.position.x = float(t[0])
+        pose_msg.pose.position.y = float(t[1])
+        pose_msg.pose.position.z = float(t[2])
+
+        # 旋转矩阵转四元数
+        R = transform_4x4[:3, :3].copy()
+        import scipy.spatial.transform
+        quat = scipy.spatial.transform.Rotation.from_matrix(R).as_quat()  # [x, y, z, w]
+        pose_msg.pose.orientation.x = quat[0]
+        pose_msg.pose.orientation.y = quat[1]
+        pose_msg.pose.orientation.z = quat[2]
+        pose_msg.pose.orientation.w = quat[3]
+
+        # 发布
+        self.pose_publisher.publish(pose_msg)
+        self.get_logger().info("Published ICP PoseStamped.")
+
 
     def depth_image_to_pointcloud(self, depth_msg: Image):
         """将ROS的 depth image (sensor_msgs/Image) 转成 Open3D 点云。"""

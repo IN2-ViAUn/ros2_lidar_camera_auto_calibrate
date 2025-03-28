@@ -13,5 +13,11 @@ Automatically calibrate camera with lidar by performing ICP to lidar pointcloud 
 ## Deps
 
 ```bash
-pip install open3d message-filters opencv-python
+pip install open3d message-filters opencv-python scipy
 ```
+
+## Publishers
+
+tf_publisher: will publish frame TF from between `camera_frame` -> `lidar_frame`
+
+PoseStamped_publisher: topic is `camera_to_lidar_RT`, means point_camera * camera_to_lidar_RT = point_lidar
