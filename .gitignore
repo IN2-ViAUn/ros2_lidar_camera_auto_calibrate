@@ -1,0 +1,44 @@
+# ROS 2 build and install artifacts
+/build/
+/install/
+/log/
+
+# Colcon specific files
+colcon.meta
+colcon.pkg
+
+# ROS 2 dependencies (e.g., installed by rosdep)
+ros2_ws/src/CMakeLists.txt
+ros2_ws/src/**/CMakeLists.txt.user
+ros2_ws/src/**/package.xml.user
+
+# CMake and other build system files
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+*.swp
+*.swo
+
+# VS Code settings and extensions
+.vscode/
+
+# Python and other temporary files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.log
+
+# JetBrains IDEs (e.g., CLion, PyCharm)
+.idea/
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# ROS 2 launch logs
+log/latest/
+log/latest_*
+
+*.pcd
